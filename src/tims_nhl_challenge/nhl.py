@@ -64,11 +64,24 @@ class NHLClient:
     def get_player_stats(self, name: str) -> PlayerStats:
         match = self.find_player(name)
         player_id = int(match["playerId"])
+        return self.get_player_stats_by_id(
+            player_id,
+            fallback_name=str(match.get("name") or name),
+            fallback_team=str(match.get("teamAbbrev") or "—"),
+        )
+
+    def get_player_stats_by_id(
+        self,
+        player_id: int,
+        *,
+        fallback_name: str = "",
+        fallback_team: str = "—",
+    ) -> PlayerStats:
         payload = self._get_json(PLAYER_URL.format(player_id=player_id))
 
         first_name = payload.get("firstName", {}).get("default", "")
         last_name = payload.get("lastName", {}).get("default", "")
-        resolved_name = f"{first_name} {last_name}".strip() or str(match.get("name", name))
+        resolved_name = f"{first_name} {last_name}".strip() or fallback_name
         current = (
             payload.get("featuredStats", {})
             .get("regularSeason", {})
@@ -77,7 +90,7 @@ class NHLClient:
         return PlayerStats(
             player_id=player_id,
             name=resolved_name,
-            team=str(payload.get("currentTeamAbbrev") or match.get("teamAbbrev") or "—"),
+            team=str(payload.get("currentTeamAbbrev") or fallback_team),
             games_played=int(current.get("gamesPlayed") or 0),
             goals=int(current.get("goals") or 0),
         )
@@ -94,4 +107,3 @@ def rank_players(players: list[PlayerStats]) -> list[PlayerStats]:
 
 def _normalise_name(name: str) -> str:
     return " ".join(name.casefold().split())
-

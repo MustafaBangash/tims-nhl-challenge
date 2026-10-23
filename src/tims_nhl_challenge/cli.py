@@ -65,6 +65,35 @@ def fetch_all(client: NHLClient, categories: list[list[str]]) -> tuple[dict[str,
     return results, errors
 
 
+def fetch_all_by_id(
+    client: NHLClient,
+    categories: list[list[str]],
+    candidates: dict[str, PlayerStats],
+) -> tuple[dict[str, PlayerStats], dict[str, str]]:
+    names = list(dict.fromkeys(name for category in categories for name in category))
+    results: dict[str, PlayerStats] = {}
+    errors: dict[str, str] = {}
+    with ThreadPoolExecutor(max_workers=min(8, len(names))) as pool:
+        pending = {
+            pool.submit(
+                client.get_player_stats_by_id,
+                candidates[name].player_id,
+                fallback_name=name,
+                fallback_team=candidates[name].team,
+            ): name
+            for name in names
+        }
+        for future in as_completed(pending):
+            name = pending[future]
+            try:
+                results[name] = future.result()
+            except NHLAPIError as exc:
+                errors[name] = str(exc)
+            except Exception as exc:
+                errors[name] = f"Unexpected error: {exc}"
+    return results, errors
+
+
 def render_category(number: int, names: list[str], results: dict[str, PlayerStats]) -> str:
     ranked = rank_players([results[name] for name in names if name in results])
     lines = [f"Category {number}", "-" * 67]
@@ -91,7 +120,7 @@ def render_category(number: int, names: list[str], results: dict[str, PlayerStat
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    results: dict[str, PlayerStats] | None = None
+    candidates: dict[str, PlayerStats] | None = None
     try:
         if args.category:
             categories = [parse_category(value) for value in args.category]
@@ -99,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             categories = prompt_for_categories()
         else:
             try:
-                categories, results, choices_date = fetch_daily_picks()
+                categories, candidates, choices_date = fetch_daily_picks()
                 print(
                     f"Loaded {sum(map(len, categories))} available players for "
                     f"{choices_date.isoformat()} from Hockey Challenge Helper."
@@ -113,11 +142,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     errors: dict[str, str] = {}
-    if results is None:
-        print("\nFetching current NHL regular-season statistics...\n")
+    print("\nFetching current NHL regular-season statistics...\n")
+    if candidates is None:
         results, errors = fetch_all(NHLClient(), categories)
     else:
-        print()
+        results, errors = fetch_all_by_id(NHLClient(), categories, candidates)
     for index, names in enumerate(categories, start=1):
         print(render_category(index, names, results))
         print()

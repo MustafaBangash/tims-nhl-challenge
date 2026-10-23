@@ -21,10 +21,11 @@ From this project directory:
 python3 tims_nhl.py
 ```
 
-By default, the program downloads today's available choices, validates their
-date, ranks every player, and prints one recommendation per category. If that
-source is unavailable or returns invalid or stale data, the program automatically
-switches to manual entry.
+By default, the program downloads today's available choices and NHL player IDs,
+validates their date, then retrieves every player's current statistics directly
+from the NHL API. It ranks the players and prints one recommendation per category.
+If the choices source is unavailable or returns invalid or stale data, the
+program automatically switches to manual entry.
 
 To skip the automatic download and enter players yourself, use:
 
@@ -80,14 +81,14 @@ tims-nhl
 
 ## How the recommendation works
 
-For automatically downloaded choices, the tool uses the player IDs and current
-regular-season totals included in the daily feed. For manually entered names,
-it:
+For automatically downloaded choices, Hockey Challenge Helper supplies only the
+eligible groups and NHL player IDs. The statistics used in the ranking come
+directly from the NHL API. For manually entered names, the tool first resolves
+their NHL player IDs. It then:
 
-1. Resolves the name through the NHL player-search service.
-2. Fetches that player's current-season regular-season totals.
-3. Calculates `goals / games played`.
-4. Sorts each category by G/GP, then total goals, then games played.
+1. Fetches each player's current-season regular-season totals from the NHL.
+2. Calculates `goals / games played`.
+3. Sorts each category by G/GP, then total goals, then games played.
 
 This is a simple historical-rate recommendation. It does not account for the
 day's opponent, starting goalie, injuries, line combinations, or recent form,

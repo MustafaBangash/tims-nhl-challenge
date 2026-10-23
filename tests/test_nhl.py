@@ -24,6 +24,23 @@ class NHLTests(unittest.TestCase):
         self.assertEqual(player("Test Player", 10, 4).goals_per_game, 0.4)
         self.assertEqual(player("No Games", 0, 0).goals_per_game, 0.0)
 
+    def test_fetch_stats_by_id_uses_nhl_response(self) -> None:
+        from tims_nhl_challenge.nhl import NHLClient
+
+        client = NHLClient()
+        client._get_json = lambda _url: {  # type: ignore[method-assign]
+            "firstName": {"default": "Fresh"},
+            "lastName": {"default": "Stats"},
+            "currentTeamAbbrev": "EDM",
+            "featuredStats": {
+                "regularSeason": {"subSeason": {"gamesPlayed": 12, "goals": 9}}
+            },
+        }
+        stats = client.get_player_stats_by_id(8470000, fallback_name="Old Name")
+        self.assertEqual(stats.name, "Fresh Stats")
+        self.assertEqual(stats.games_played, 12)
+        self.assertEqual(stats.goals, 9)
+
     def test_rank_players_uses_rate_then_goals(self) -> None:
         ranked = rank_players(
             [
