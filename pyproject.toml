@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tims-nhl-challenge"
+version = "0.1.0"
+description = "Rank Tim Hortons NHL Challenge player choices by goals per game."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Mustafa Bangash" }]
+dependencies = []
+
+[project.scripts]
+tims-nhl = "tims_nhl_challenge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
