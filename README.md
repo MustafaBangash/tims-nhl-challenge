@@ -26,11 +26,10 @@ Enter one comma-separated category per line. For example:
 Category 1: Connor McDavid, Auston Matthews, Nathan MacKinnon
 Category 2: Leon Draisaitl, David Pastrnak, Kyle Connor
 Category 3: William Nylander, Jack Hughes, Kirill Kaprizov
-Category 4:
 ```
 
-The empty fourth line tells the program you are finished. The tool supports any
-number of categories, even though the challenge normally presents three.
+The program starts fetching and ranking players as soon as you enter Category 3.
+There is no extra prompt needed to finish.
 
 You can also provide all categories in one command:
 

@@ -1,11 +1,16 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from tims_nhl_challenge.cli import parse_category, render_category  # noqa: E402
+from tims_nhl_challenge.cli import (  # noqa: E402
+    parse_category,
+    prompt_for_categories,
+    render_category,
+)
 from tims_nhl_challenge.nhl import PlayerStats, rank_players  # noqa: E402
 
 
@@ -36,6 +41,17 @@ class NHLTests(unittest.TestCase):
             parse_category("Auston Matthews, , Connor McDavid"),
             ["Auston Matthews", "Connor McDavid"],
         )
+
+    @patch(
+        "builtins.input",
+        side_effect=["Player A, Player B", "Player C", "Player D, Player E"],
+    )
+    def test_interactive_input_stops_after_three_categories(self, mock_input) -> None:
+        self.assertEqual(
+            prompt_for_categories(),
+            [["Player A", "Player B"], ["Player C"], ["Player D", "Player E"]],
+        )
+        self.assertEqual(mock_input.call_count, 3)
 
     def test_render_category_recommends_top_player(self) -> None:
         results = {

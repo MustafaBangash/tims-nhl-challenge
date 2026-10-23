@@ -31,18 +31,14 @@ def parse_category(value: str) -> list[str]:
 
 def prompt_for_categories() -> list[list[str]]:
     print("Enter the players shown in each Tim's NHL Challenge category.")
-    print("Separate names with commas. Press Enter on an empty line when finished.\n")
+    print("Separate names with commas. The rankings begin after Category 3.\n")
     categories: list[list[str]] = []
-    category_number = 1
-    while True:
+    for category_number in range(1, 4):
         value = input(f"Category {category_number}: ").strip()
-        if not value:
-            if categories:
-                break
-            print("Please enter at least one category.")
-            continue
+        while not value:
+            print("Please enter at least one player.")
+            value = input(f"Category {category_number}: ").strip()
         categories.append(parse_category(value))
-        category_number += 1
     return categories
 
 
@@ -115,4 +111,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
