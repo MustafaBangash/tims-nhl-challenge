@@ -4,6 +4,7 @@ import argparse
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+from .daily_picks import DailyPicksError, fetch_daily_picks
 from .nhl import NHLAPIError, NHLClient, PlayerStats, rank_players
 
 
@@ -18,6 +19,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         metavar="PLAYER,PLAYER,...",
         help="Players in one category. Repeat this option for each category.",
+    )
+    parser.add_argument(
+        "--manual",
+        action="store_true",
+        help="Skip the online daily choices and enter three categories manually.",
     )
     return parser
 
@@ -85,18 +91,33 @@ def render_category(number: int, names: list[str], results: dict[str, PlayerStat
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    results: dict[str, PlayerStats] | None = None
     try:
-        categories = (
-            [parse_category(value) for value in args.category]
-            if args.category
-            else prompt_for_categories()
-        )
+        if args.category:
+            categories = [parse_category(value) for value in args.category]
+        elif args.manual:
+            categories = prompt_for_categories()
+        else:
+            try:
+                categories, results, choices_date = fetch_daily_picks()
+                print(
+                    f"Loaded {sum(map(len, categories))} available players for "
+                    f"{choices_date.isoformat()} from Hockey Challenge Helper."
+                )
+            except DailyPicksError as exc:
+                print(f"Automatic choices unavailable: {exc}", file=sys.stderr)
+                print("Switching to manual entry.\n", file=sys.stderr)
+                categories = prompt_for_categories()
     except (ValueError, EOFError, KeyboardInterrupt) as exc:
         print(f"Input error: {exc}", file=sys.stderr)
         return 2
 
-    print("\nFetching current NHL regular-season statistics...\n")
-    results, errors = fetch_all(NHLClient(), categories)
+    errors: dict[str, str] = {}
+    if results is None:
+        print("\nFetching current NHL regular-season statistics...\n")
+        results, errors = fetch_all(NHLClient(), categories)
+    else:
+        print()
     for index, names in enumerate(categories, start=1):
         print(render_category(index, names, results))
         print()

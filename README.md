@@ -4,7 +4,8 @@ A small Python command-line tool that ranks the players in each Tim Hortons NHL
 Challenge category by their current regular-season goals per game (G/GP), then
 recommends the highest-ranked player.
 
-It uses the NHL's public JSON endpoints and needs no API key or third-party
+It automatically loads the day's three player groups from Hockey Challenge
+Helper, with manual entry as a fallback. It needs no API key or third-party
 Python packages.
 
 ## Requirements
@@ -20,8 +21,19 @@ From this project directory:
 python3 tims_nhl.py
 ```
 
-The interactive version asks for exactly three categories. Enter the player
-names for each category on one line, separated by commas:
+By default, the program downloads today's available choices, validates their
+date, ranks every player, and prints one recommendation per category. If that
+source is unavailable or returns invalid or stale data, the program automatically
+switches to manual entry.
+
+To skip the automatic download and enter players yourself, use:
+
+```bash
+python3 tims_nhl.py --manual
+```
+
+Manual mode asks for exactly three categories. Enter the player names for each
+category on one line, separated by commas:
 
 ```text
 Category 1: Connor McDavid, Auston Matthews, Nathan MacKinnon
@@ -68,7 +80,9 @@ tims-nhl
 
 ## How the recommendation works
 
-For every entered name, the tool:
+For automatically downloaded choices, the tool uses the player IDs and current
+regular-season totals included in the daily feed. For manually entered names,
+it:
 
 1. Resolves the name through the NHL player-search service.
 2. Fetches that player's current-season regular-season totals.
@@ -89,8 +103,12 @@ python3 -m unittest discover -s tests -v
 
 ## Data sources
 
+- Daily challenge choices: `https://api.hockeychallengehelper.com/api/picks`
 - Player search: `https://search.d3.nhle.com/api/v1/search/player`
 - Player statistics: `https://api-web.nhle.com/v1/player/{playerId}/landing`
 
-These public endpoints do not require an API key, but the NHL does not publish a
-formal stability guarantee for them.
+These public endpoints do not require an API key. Hockey Challenge Helper is an
+unofficial third-party source, so its availability and response format can change.
+That is why the program validates its response and retains manual entry as a
+fallback. The NHL also does not publish a formal stability guarantee for its
+JSON endpoints.

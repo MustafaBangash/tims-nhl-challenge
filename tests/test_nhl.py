@@ -11,6 +11,7 @@ from tims_nhl_challenge.cli import (  # noqa: E402
     prompt_for_categories,
     render_category,
 )
+from tims_nhl_challenge.daily_picks import DailyPicksError, parse_daily_picks  # noqa: E402
 from tims_nhl_challenge.nhl import PlayerStats, rank_players  # noqa: E402
 
 
@@ -60,6 +61,42 @@ class NHLTests(unittest.TestCase):
         }
         output = render_category(1, ["A", "B"], results)
         self.assertIn("Recommendation: Player B", output)
+
+    def test_parse_daily_picks(self) -> None:
+        from datetime import date
+
+        payload = {
+            "dateTimeAvailable": "2026-10-23T00:00:00",
+            "playerLists": [
+                {
+                    "players": [
+                        {
+                            "nhlPlayerId": index,
+                            "fullName": f"Player {index}",
+                            "team": "TOR",
+                            "gamesPlayed": 10,
+                            "goals": index,
+                        }
+                    ]
+                }
+                for index in range(1, 4)
+            ],
+        }
+        categories, results, available_date = parse_daily_picks(
+            payload, expected_date=date(2026, 10, 23)
+        )
+        self.assertEqual(categories, [["Player 1"], ["Player 2"], ["Player 3"]])
+        self.assertEqual(results["Player 3"].goals, 3)
+        self.assertEqual(available_date, date(2026, 10, 23))
+
+    def test_parse_daily_picks_rejects_stale_data(self) -> None:
+        from datetime import date
+
+        with self.assertRaises(DailyPicksError):
+            parse_daily_picks(
+                {"dateTimeAvailable": "2026-10-22T00:00:00", "playerLists": []},
+                expected_date=date(2026, 10, 23),
+            )
 
 
 if __name__ == "__main__":
