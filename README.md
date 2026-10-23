@@ -20,7 +20,8 @@ From this project directory:
 python3 tims_nhl.py
 ```
 
-Enter one comma-separated category per line. For example:
+The interactive version asks for exactly three categories. Enter the player
+names for each category on one line, separated by commas:
 
 ```text
 Category 1: Connor McDavid, Auston Matthews, Nathan MacKinnon
@@ -28,8 +29,22 @@ Category 2: Leon Draisaitl, David Pastrnak, Kyle Connor
 Category 3: William Nylander, Jack Hughes, Kirill Kaprizov
 ```
 
-The program starts fetching and ranking players as soon as you enter Category 3.
-There is no extra prompt needed to finish.
+After you submit Category 3, the program immediately fetches the current NHL
+statistics, ranks the players in each category, and prints one recommendation
+per category. You do not need to enter a blank line or a fourth category.
+
+Example result:
+
+```text
+Category 1
+-------------------------------------------------------------------
+Rank  Player                     Team      GP    G     G/GP
+1     Connor McDavid             EDM       10    8    0.800
+2     Auston Matthews            TOR       12    8    0.667
+3     Nathan MacKinnon           COL       10    6    0.600
+
+Recommendation: Connor McDavid (8 goals in 10 games; 0.800 G/GP)
+```
 
 You can also provide all categories in one command:
 
